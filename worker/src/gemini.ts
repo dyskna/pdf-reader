@@ -84,7 +84,8 @@ async function callGemini(
       },
     )
 
-    if (response.status === 429) {
+    // 429: wyczerpany limit darmowego tieru, 503: model przeciążony po stronie Google
+    if (response.status === 429 || response.status === 503) {
       throw new AnalysisError(
         503,
         'Usługa AI jest chwilowo przeciążona. Spróbuj ponownie za minutę.',

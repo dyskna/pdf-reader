@@ -10,7 +10,7 @@ const allowedOrigin = 'https://dyskna.github.io'
 function makeEnv(rateLimitOk = true): Env {
   return {
     ALLOWED_ORIGIN: allowedOrigin,
-    GEMINI_MODEL: 'gemini-3.8-flash',
+    GEMINI_MODEL: 'gemini-3.5-flash-lite',
     GEMINI_API_KEY: 'test-key',
     RATE_LIMITER: { limit: async () => ({ success: rateLimitOk }) },
   }
@@ -93,7 +93,7 @@ describe('POST /analyze: analiza', () => {
 
     // Klucz idzie w nagłówku do Gemini, nie w adresie
     const [url, init] = fetchMock.mock.calls[0]
-    expect(String(url)).toContain('gemini-3.8-flash:generateContent')
+    expect(String(url)).toContain('gemini-3.5-flash-lite:generateContent')
     expect(String(url)).not.toContain('test-key')
     expect(new Headers(init?.headers).get('x-goog-api-key')).toBe('test-key')
   })
@@ -132,6 +132,20 @@ describe('POST /analyze: analiza', () => {
       makeEnv(),
     )
     expect(response.status).toBe(503)
+  })
+
+  it('przeciążony model Gemini (503) zwraca 503 z komunikatem', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(
+      async () => new Response('high demand', { status: 503 }),
+    )
+    const response = await worker.fetch(
+      request('POST', allowedOrigin, validBody),
+      makeEnv(),
+    )
+    expect(response.status).toBe(503)
+    expect(await response.json()).toEqual({
+      error: 'Usługa AI jest chwilowo przeciążona. Spróbuj ponownie za minutę.',
+    })
   })
 })
 
