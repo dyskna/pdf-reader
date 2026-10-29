@@ -1,0 +1,10 @@
+{
+  "name": "pdf-insight-worker",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "vars": {
+    // Jedyny origin, z którego przeglądarka może wołać Workera (GitHub Pages).
+    // Lokalnie nadpisany w .dev.vars na http://localhost:5173.
+    "ALLOWED_ORIGIN": "https://dyskna.github.io",
+  },
+}
