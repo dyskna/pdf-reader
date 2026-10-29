@@ -175,7 +175,7 @@ Do AI wysyłamy **tylko to, co konieczne**. Dokumenty bywają poufne, a plik tes
 - [x] Etap 0: przygotowanie
 - [x] Etap 1: szkielet i demo
 - [x] Etap 2: odczyt PDF
-- [ ] Etap 3: analiza AI
+- [x] Etap 3: analiza AI
 - [ ] Etap 4: długie dokumenty i historia
 - [ ] Etap 5: interfejs z Claude Design
 - [ ] Etap 6: wyniki i bezpieczeństwo
