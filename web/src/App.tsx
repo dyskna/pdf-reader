@@ -1,49 +1,29 @@
-import { useState } from 'react'
-import { analyze } from './api/analyze'
-import type { AnalysisResult } from './lib/schema'
+import { FileDrop } from './components/FileDrop'
+import { ResultPreview } from './components/ResultPreview'
+import { ErrorMessage, LoadingStatus } from './components/StatusView'
+import { usePdfAnalysis } from './hooks/usePdfAnalysis'
 
-type State =
-  | { status: 'idle' }
-  | { status: 'loading' }
-  | { status: 'success'; result: AnalysisResult }
-  | { status: 'error'; message: string }
-
-// Ekran roboczy z etapu 1: sprawdza tylko połączenie z Workerem.
+// Interfejs roboczy z etapu 2. Wygląd przyjdzie w etapie 5.
 export default function App() {
-  const [state, setState] = useState<State>({ status: 'idle' })
-
-  async function sendTestRequest() {
-    setState({ status: 'loading' })
-    try {
-      const result = await analyze({
-        fileName: 'przyklad.pdf',
-        pages: 1,
-        text: '[Strona 1]\nPrzykładowy tekst dokumentu.',
-        skippedPages: [],
-      })
-      setState({ status: 'success', result })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nieznany błąd.'
-      setState({ status: 'error', message })
-    }
-  }
+  const { state, analyzeFile, retry } = usePdfAnalysis()
 
   return (
     <main>
       <h1>PDF Insight</h1>
-      <p>Wersja robocza: test połączenia z serwerem.</p>
-      <button
-        type="button"
-        onClick={sendTestRequest}
-        disabled={state.status === 'loading'}
-      >
-        Wyślij testowe żądanie
-      </button>
-      {state.status === 'loading' && <p>Wysyłanie…</p>}
-      {state.status === 'error' && <p role="alert">{state.message}</p>}
-      {state.status === 'success' && (
-        <pre>{JSON.stringify(state.result, null, 2)}</pre>
+
+      {state.status === 'reading' || state.status === 'analyzing' ? (
+        <LoadingStatus stage={state.status} />
+      ) : (
+        <FileDrop onFile={analyzeFile} />
       )}
+
+      {state.status === 'error' && (
+        <ErrorMessage
+          message={state.message}
+          onRetry={state.file ? retry : undefined}
+        />
+      )}
+      {state.status === 'success' && <ResultPreview result={state.result} />}
     </main>
   )
 }

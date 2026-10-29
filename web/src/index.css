@@ -13,3 +13,38 @@ body {
 pre {
   overflow-x: auto;
 }
+
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 2rem;
+  border: 2px dashed currentColor;
+  border-radius: 0.5rem;
+}
+
+.drop-zone.is-dragging {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.hint {
+  opacity: 0.7;
+}
+
+.stages [aria-current='step'] {
+  font-weight: bold;
+}
+
+.error,
+.warning {
+  padding: 0.75rem;
+  border-left: 4px solid;
+}
+
+.error {
+  border-color: #d33;
+}
+
+.warning {
+  border-color: #e9a400;
+}
