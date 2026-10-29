@@ -6,5 +6,18 @@
     // Jedyny origin, z którego przeglądarka może wołać Workera (GitHub Pages).
     // Lokalnie nadpisany w .dev.vars na http://localhost:5173.
     "ALLOWED_ORIGIN": "https://dyskna.github.io",
+    "GEMINI_MODEL": "gemini-3.8-flash",
   },
+  // Klucz wpisany przez `wrangler secret put GEMINI_API_KEY`, lokalnie w .dev.vars
+  "secrets": {
+    "required": ["GEMINI_API_KEY"],
+  },
+  // Limit żądań per IP. Działa w przybliżeniu i osobno w każdej lokalizacji Cloudflare.
+  "ratelimits": [
+    {
+      "name": "RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 10, "period": 60 },
+    },
+  ],
 }
