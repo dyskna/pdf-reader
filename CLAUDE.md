@@ -106,7 +106,7 @@ Do AI wysyłamy **tylko to, co konieczne**. Dokumenty bywają poufne, a plik tes
 ## Plan
 
 ### Etap 0: przygotowanie 👤
-- 👤 Tworzę publiczne repo `pdf-insight`, klonuję je i robię pierwszy commit na `main` z samym `CLAUDE.md`.
+- 👤 Tworzę publiczne repo `pdf-reader`, klonuję je i robię pierwszy commit na `main` z samym `CLAUDE.md`.
 - 👤 W **Settings → General → Pull Requests** zostawiam włączone tylko **„Allow rebase merging”** (i ewentualnie merge commit), a squash wyłączam.
 - 👤 W **Settings → Pages** ustawiam źródło na **GitHub Actions**.
 - 👤 Zakładam klucz w Google AI Studio i wybieram aktualny model Flash.
@@ -114,16 +114,16 @@ Do AI wysyłamy **tylko to, co konieczne**. Dokumenty bywają poufne, a plik tes
 
 ### Etap 1: szkielet i działające demo
 - Monorepo `web/` + `worker/`, TS strict, ESLint, Prettier, Vitest, `.gitignore`, pliki `.example`.
-- `vite.config.ts` z `base: '/pdf-insight/'`.
+- `vite.config.ts` z `base: '/pdf-reader/'`.
 - Worker: `POST /analyze` zwraca na razie **przykładowy JSON** zgodny ze schematem.
 - Oba workflowy GitHub Actions w trybie PR + deploy po merge'u (patrz „CI”).
 - 👤 Wpisuję sekret (`wrangler secret put GEMINI_API_KEY`).
 - Branch `etap-1-szkielet` → PR → 👤 merge → deploy.
-- Po merge'u sprawdź ze mną, że demo działa pod `https://<user>.github.io/pdf-insight/`, a Worker odpowiada z originu Pages i odrzuca obce originy.
+- Po merge'u sprawdź ze mną, że demo działa pod `https://<user>.github.io/pdf-reader/`, a Worker odpowiada z originu Pages i odrzuca obce originy.
 
 ### Etap 2: wgrywanie i odczyt PDF (logika, prosty interfejs roboczy)
 - Drag & drop + wybór pliku. Tylko PDF, maksymalnie 10 MB, komunikaty walidacji po polsku.
-- `pdfjs-dist` z **poprawną ścieżką do workera pdf.js** pod base `/pdf-insight/`: liczba stron, tekst strona po stronie złożony w linie (patrz „Odczyt PDF”), wykrycie stron bez warstwy tekstowej.
+- `pdfjs-dist` z **poprawną ścieżką do workera pdf.js** pod base `/pdf-reader/`: liczba stron, tekst strona po stronie złożony w linie (patrz „Odczyt PDF”), wykrycie stron bez warstwy tekstowej.
 - Funkcje odczytu i składania linii w `lib/` z testami na prostych danych wejściowych.
 - Stany: pusty, ładowanie z etapami („Odczyt PDF”, „Analiza AI”), błąd z przyciskiem „Spróbuj ponownie”.
 - Interfejs na tym etapie jest tylko roboczy. Wygląd przyjdzie w etapie 5, więc logikę trzymaj z dala od komponentów prezentacyjnych (hooki i `lib/`), żeby łatwo podmienić UI.
@@ -148,7 +148,7 @@ Do AI wysyłamy **tylko to, co konieczne**. Dokumenty bywają poufne, a plik tes
 - Projekt traktujemy jako **źródło prawdy dla wyglądu**. Odwzoruj go wiernie, ale w naszym stacku: komponenty React + TypeScript, style w CSS (zmienne CSS na kolory, fonty i odstępy z projektu). Nie kopiuj na ślepo wygenerowanego HTML ani skryptów z eksportu.
 - Logika z etapów 2–4 się nie zmienia. Podmieniasz tylko warstwę prezentacji.
 - Jeśli projekt nie obejmuje jakiegoś stanu (błąd, ładowanie, pusta historia, pominięte strony, podgląd JSON), zaprojektuj go w tym samym stylu i pokaż mi.
-- Fonty i zasoby z paczki wczytuj lokalnie albo z Google Fonts. Ścieżki muszą działać pod base `/pdf-insight/`.
+- Fonty i zasoby z paczki wczytuj lokalnie albo z Google Fonts. Ścieżki muszą działać pod base `/pdf-reader/`.
 - Przy wgrywaniu informacja, że **tekst** pliku trafia do zewnętrznego API AI (Google Gemini), a obrazy skanów tylko po osobnej zgodzie.
 - Okno zgody na OCR i ostrzeżenie o pominiętych stronach w stylu projektu.
 - Responsywność od 360 px, obsługa klawiaturą (widoczny focus), czytelny kontrast, wszystkie teksty po polsku.
@@ -172,7 +172,7 @@ Do AI wysyłamy **tylko to, co konieczne**. Dokumenty bywają poufne, a plik tes
 ---
 
 ## Postęp
-- [ ] Etap 0: przygotowanie
+- [x] Etap 0: przygotowanie
 - [ ] Etap 1: szkielet i demo
 - [ ] Etap 2: odczyt PDF
 - [ ] Etap 3: analiza AI
