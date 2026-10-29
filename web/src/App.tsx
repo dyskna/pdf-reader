@@ -1,11 +1,12 @@
 import { FileDrop } from './components/FileDrop'
 import { ResultPreview } from './components/ResultPreview'
+import { ScanConsent } from './components/ScanConsent'
 import { ErrorMessage, LoadingStatus } from './components/StatusView'
 import { usePdfAnalysis } from './hooks/usePdfAnalysis'
 
-// Interfejs roboczy z etapu 2. Wygląd przyjdzie w etapie 5.
+// Interfejs roboczy. Wygląd przyjdzie w etapie 5.
 export default function App() {
-  const { state, analyzeFile, retry } = usePdfAnalysis()
+  const { state, analyzeFile, retry, sendScans, skipScans } = usePdfAnalysis()
 
   return (
     <main>
@@ -13,6 +14,12 @@ export default function App() {
 
       {state.status === 'reading' || state.status === 'analyzing' ? (
         <LoadingStatus stage={state.status} />
+      ) : state.status === 'askingConsent' ? (
+        <ScanConsent
+          scanPages={state.pdf.scanPages}
+          onSend={sendScans}
+          onSkip={skipScans}
+        />
       ) : (
         <FileDrop onFile={analyzeFile} />
       )}
