@@ -20,3 +20,6 @@ dist/
 
 # PDF-y testowe bywają poufne, więc nie trafiają do publicznego repo
 *.pdf
+
+# Pliki pdf.js kopiowane przez web/scripts/copy-pdfjs.mjs
+web/public/pdfjs/

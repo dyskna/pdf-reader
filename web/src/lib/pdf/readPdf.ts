@@ -1,11 +1,7 @@
-import { getDocument, GlobalWorkerOptions, PasswordException } from 'pdfjs-dist'
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import { PasswordException } from 'pdfjs-dist'
 import { piecesToLines, type TextPiece } from './lines'
 import { isLikelyScan, type PageText } from './pages'
-
-// pdf.js parsuje PDF w osobnym wątku. Import `?url` sprawia, że Vite kopiuje plik
-// workera do builda i zwraca jego adres razem z base /pdf-reader/.
-GlobalWorkerOptions.workerSrc = workerUrl
+import { openPdf } from './pdfjs'
 
 export type PdfContent = {
   pages: number
@@ -15,7 +11,7 @@ export type PdfContent = {
 
 export async function readPdf(file: File): Promise<PdfContent> {
   const data = new Uint8Array(await file.arrayBuffer())
-  const loadingTask = getDocument({ data })
+  const loadingTask = openPdf(data)
 
   try {
     const pdf = await loadingTask.promise.catch((error: unknown) => {
