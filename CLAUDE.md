@@ -20,10 +20,10 @@ Ten plik czytasz na początku każdej sesji. Realizujesz plan etap po etapie i o
 - **Na `main` nie commitujesz i nie pushujesz nigdy.** Jedyny commit na `main` bez PR to mój pierwszy commit z tym plikiem.
 - **Każdy etap to osobny branch** `etap-N-<krótka-nazwa>` (np. `etap-2-odczyt-pdf`), tworzony od aktualnego `main` (`git switch main && git pull`, potem `git switch -c ...`).
 - **Commity** w formacie Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`, `ci:`, `chore:`), kilka logicznych na etap, nie jeden zbiorczy.
-- **Na koniec etapu** pushujesz tylko swój branch (`git push -u origin <branch>`) i dajesz mi:
-  - link do założenia PR,
-  - gotowy opis PR w sekcjach: **Co i po co**, **Jak przetestowano**, **Wynik CI**, **Ryzyka / do sprawdzenia**.
-- 👤 **PR zakładam i merguję ja**, ręcznie w przeglądarce, przez **„Rebase and merge”** (bez squash, żeby na `main` zostały logiczne commity). Merguję dopiero po zielonym CI i przejrzeniu zmian.
+- **Na koniec etapu** pushujesz tylko swój branch (`git push -u origin <branch>`) i **sam zakładasz PR** przez `gh pr create`:
+  - opis PR w sekcjach: **Co i po co**, **Jak przetestowano**, **Wynik CI**, **Ryzyka / do sprawdzenia**,
+  - czekasz na wynik CI (`gh pr checks`), uzupełniasz sekcję „Wynik CI” i dajesz mi link do PR.
+- 👤 **PR przeglądam i merguję ja**, ręcznie w przeglądarce, przez **„Rebase and merge”** (bez squash, żeby na `main` zostały logiczne commity). Merguję dopiero po zielonym CI i przejrzeniu zmian.
 - Po merge'u: `git switch main && git pull`, usuń lokalny branch i zacznij kolejny etap od nowego brancha.
 - **Zakazane bez mojej wyraźnej zgody:** `push --force`, `reset --hard`, `rebase` na `main`, usuwanie branchy zdalnych, mergowanie PR, zmiany ustawień repo.
 
