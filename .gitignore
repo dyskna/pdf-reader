@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.wrangler/
+*.log
+*.local
+
+# Edytory i system
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+
+# Sekrety: w repo są tylko pliki .example z placeholderami
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# PDF-y testowe bywają poufne, więc nie trafiają do publicznego repo
+*.pdf

@@ -1,0 +1,5 @@
+package-lock.json
+.wrangler/
+worker/worker-configuration.d.ts
+# CLAUDE.md zmieniamy tylko za zgodą, więc Prettier go nie przepisuje
+CLAUDE.md

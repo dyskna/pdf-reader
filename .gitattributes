@@ -1,0 +1,5 @@
+# Zawsze LF, także na Windows. Inaczej Prettier zgłasza różnice końców linii.
+* text=auto eol=lf
+
+# Plik generowany przez `wrangler types`; GitHub zwija go w diffach
+worker/worker-configuration.d.ts linguist-generated=true
