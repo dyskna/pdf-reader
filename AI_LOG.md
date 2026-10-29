@@ -38,7 +38,7 @@ _Zostaną uzupełnione w etapie 7._
 **Decyzje:**
 
 - Worker pdf.js importowany przez `?url`, żeby Vite dodał base `/pdf-reader/`.
-- Duży odstęp poziomy (> 2× wysokość czcionki) → separator ` | ` między kolumnami/komórkami; elementy-spacje z pdf.js pomijane przy liczeniu odstępu.
+- Duży odstęp poziomy (> 2× wysokość czcionki) → separator `|` między kolumnami/komórkami; elementy-spacje z pdf.js pomijane przy liczeniu odstępu.
 - Skan = mniej niż 30 znaków bez białych znaków (zapas na znak wodny „POUFNE”).
 - Gdy wszystkie strony to skany: czytelny błąd zamiast wysyłania pustego tekstu (OCR w etapie 3).
 - Stany w czystym reducerze testowanym Vitestem, bez nowej zależności do testów komponentów.
