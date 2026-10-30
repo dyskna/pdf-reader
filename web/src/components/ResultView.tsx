@@ -1,3 +1,4 @@
+import { downloadJson } from '../lib/download'
 import {
   currencyLabel,
   documentTypeLabel,
@@ -53,6 +54,13 @@ export function ResultView({ result, onNew }: Props) {
         <p className="file-name">{document.fileName}</p>
         <h1 className="doc-title">{document.title ?? document.fileName}</h1>
         <div className="actions">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => downloadJson(result)}
+          >
+            Pobierz JSON
+          </button>
           <button type="button" className="btn btn-secondary" onClick={onNew}>
             Analizuj inny plik
           </button>
@@ -74,6 +82,17 @@ export function ResultView({ result, onNew }: Props) {
             Podsumowanie
           </h2>
           <p className="summary">{result.summary}</p>
+        </section>
+
+        <section className="section" aria-labelledby="h-key-points">
+          <h2 className="section-title" id="h-key-points">
+            Kluczowe punkty
+          </h2>
+          <ol className="key-points">
+            {result.keyPoints.map((point, i) => (
+              <li key={i}>{point}</li>
+            ))}
+          </ol>
         </section>
 
         <section className="section" aria-labelledby="h-amounts">
@@ -120,11 +139,69 @@ export function ResultView({ result, onNew }: Props) {
           )}
         </section>
 
+        <section className="section" aria-labelledby="h-entities">
+          <h2 className="section-title" id="h-entities">
+            Podmioty
+          </h2>
+          <div className="entities">
+            <EntityList
+              title="Organizacje"
+              items={result.entities.organizations}
+              empty="Nie znaleziono organizacji."
+            />
+            <EntityList
+              title="Osoby"
+              items={result.entities.people}
+              empty="Nie znaleziono osób."
+            />
+          </div>
+        </section>
+
+        <section className="section" aria-labelledby="h-keywords">
+          <h2 className="section-title" id="h-keywords">
+            Słowa kluczowe
+          </h2>
+          {result.keywords.length === 0 ? (
+            <p className="empty">Nie znaleziono słów kluczowych.</p>
+          ) : (
+            <ul className="keywords">
+              {result.keywords.map((keyword, i) => (
+                <li className="tag" key={i}>
+                  {keyword}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
         <details className="section json">
           <summary>Pokaż surowy JSON</summary>
           <pre>{JSON.stringify(result, null, 2)}</pre>
         </details>
       </article>
     </main>
+  )
+}
+
+type EntityListProps = {
+  title: string
+  items: string[]
+  empty: string
+}
+
+function EntityList({ title, items, empty }: EntityListProps) {
+  return (
+    <div className="entity-group">
+      <h3 className="entity-title">{title}</h3>
+      {items.length === 0 ? (
+        <p className="empty">{empty}</p>
+      ) : (
+        <ul className="entity-list">
+          {items.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
