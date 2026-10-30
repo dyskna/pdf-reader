@@ -1,0 +1,71 @@
+/* Tokeny z projektu Claude Design, kierunek 3a „Szałwia na marginesie” (design/export/3a). */
+:root {
+  /* Kolory */
+  --color-paper: #f6f1e6; /* tło strony (ecru) */
+  --color-surface: #fbf8f1; /* pola, podgląd JSON */
+  --color-ink: #2a2c30; /* tekst główny (grafit) */
+  --color-ink-muted: #5e6168; /* tekst pomocniczy */
+  --color-line: #ddd8ce; /* linie podziału */
+  --color-line-strong: #2a2c30; /* linia sekcji głównej */
+  --color-line-control: #b9b4a9; /* obrys przycisku drugorzędnego */
+  --color-accent: #34507e; /* granat: tylko akcje */
+  --color-accent-hover: #263c60;
+  --color-accent-active: #1c2e4a;
+  --color-on-accent: #ffffff;
+  --color-sage: #c7d1bc; /* szałwia: margines, znaczniki */
+  --color-sage-line: #8fa083;
+  --color-sage-ink: #26331f; /* tekst na szałwii */
+  --color-sage-ink-inverse: #eef1e8;
+  --color-hover-neutral: #efece4;
+  --color-focus: #34507e;
+  --color-disabled-bg: #e4dfd4;
+  --color-disabled-ink: #8a8c90;
+  /* Dodane (brak w projekcie): błędy. Kontrast z tłem ok. 7:1 */
+  --color-error: #9b2c1f;
+
+  /* Typografia */
+  --font-sans: 'Schibsted Grotesk', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --text-xs: 13px;
+  --leading-xs: 1.5;
+  --text-sm: 14px;
+  --leading-sm: 1.5;
+  --text-md: 16px;
+  --leading-md: 1.5;
+  --text-lg: 19px;
+  --leading-lg: 1.3;
+  --text-xl: 21px; /* podsumowanie */
+  --leading-xl: 1.6;
+  --text-2xl: 30px; /* kwoty */
+  --leading-2xl: 1.2;
+  --text-3xl: 48px; /* tytuł dokumentu */
+  --leading-3xl: 1.1;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --tracking-tight: -0.025em;
+
+  /* Odstępy (skala 4 px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-14: 56px;
+  --space-16: 64px;
+
+  /* Promienie i linie; świadomie bez cieni */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --line-hair: 1px;
+  --line-accent: 3px;
+  --focus-ring: 2px;
+
+  /* Układ */
+  --sidebar-width: 280px;
+  --content-max: 1240px;
+}
