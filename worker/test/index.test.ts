@@ -93,7 +93,7 @@ describe('POST /analyze: analiza', () => {
 
     // Klucz idzie w nagłówku do Gemini, nie w adresie
     const [url, init] = fetchMock.mock.calls[0]
-    expect(String(url)).toContain('gemini-3.5-flash-lite:generateContent')
+    expect(String(url)).toContain('gemini-3.1-flash-lite:generateContent')
     expect(String(url)).not.toContain('test-key')
     expect(new Headers(init?.headers).get('x-goog-api-key')).toBe('test-key')
   })
