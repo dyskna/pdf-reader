@@ -17,6 +17,7 @@ export type AnalysisAction =
   | { type: 'analysisStarted' }
   | { type: 'succeeded'; result: AnalysisResult }
   | { type: 'failed'; message: string }
+  | { type: 'reset' }
 
 export const initialState: AnalysisState = { status: 'idle' }
 
@@ -27,6 +28,10 @@ export function analysisReducer(
   switch (action.type) {
     case 'started':
       return { status: 'reading', file: action.file }
+
+    // „Analizuj inny plik” / „Nowa analiza”: powrót do pustego ekranu
+    case 'reset':
+      return initialState
 
     case 'scansFound':
       if (state.status !== 'reading') return state

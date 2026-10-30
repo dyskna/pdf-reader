@@ -93,4 +93,9 @@ describe('analysisReducer', () => {
       initialState,
     )
   })
+
+  it('reset wraca do pustego ekranu z każdego stanu', () => {
+    const success: AnalysisState = { status: 'success', file, result }
+    expect(analysisReducer(success, { type: 'reset' })).toBe(initialState)
+  })
 })
