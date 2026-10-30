@@ -25,17 +25,22 @@ export function extractNumbers(text: string): number[] {
 }
 
 // Filtr ugruntowania: usuwa kwoty, których wartości nie ma w tekście z pdf.js.
-// Kwot ze skanów (source "ocr") nie da się sprawdzić w tekście, więc zostają,
-// ale tylko gdy skany rzeczywiście były wysłane.
+// Źródło ustalamy sami, bo model potrafi oznaczyć kwotę z tekstu jako "ocr":
+// - kwota jest w tekście: zostaje, source "text";
+// - nie ma jej w tekście, ale model wskazał skan i skany były wysłane: zostaje, source "ocr"
+//   (tekstu skanu nie znamy, więc nie da się jej sprawdzić);
+// - w pozostałych przypadkach kwota jest usuwana.
 export function filterUngroundedAmounts(
   amounts: Amount[],
   documentText: string,
   scansSent: boolean,
 ): Amount[] {
   const numbers = extractNumbers(documentText)
-  return amounts.filter((amount) => {
-    if (amount.source === 'ocr' && scansSent) return true
+  return amounts.flatMap((amount): Amount[] => {
     const value = Math.abs(amount.value)
-    return numbers.some((number) => Math.abs(number - value) < 0.005)
+    if (numbers.some((number) => Math.abs(number - value) < 0.005)) {
+      return [{ ...amount, source: 'text' }]
+    }
+    return amount.source === 'ocr' && scansSent ? [amount] : []
   })
 }

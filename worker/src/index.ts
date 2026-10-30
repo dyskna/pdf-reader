@@ -1,9 +1,20 @@
-import type { AnalysisResult } from '../../web/src/lib/schema'
+import type { AnalysisResult, ModelOutput } from '../../web/src/lib/schema'
 import { corsHeaders, isAllowedOrigin } from './cors'
-import { AnalysisError, analyzeWithGemini } from './gemini'
+import { splitIntoChunks } from './chunks'
+import {
+  ANALYSIS_TIME_LIMIT_MS,
+  AnalysisError,
+  analyzeWithGemini,
+  summarizeWithGemini,
+} from './gemini'
 import { filterUngroundedAmounts } from './grounding'
-import { buildParts } from './prompt'
-import { analyzeRequestSchema, MAX_REQUEST_BYTES } from './request'
+import { mergeChunkResults } from './merge'
+import { buildParts, buildSummaryParts } from './prompt'
+import {
+  analyzeRequestSchema,
+  MAX_REQUEST_BYTES,
+  type AnalyzeRequest,
+} from './request'
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -69,24 +80,7 @@ export default {
     const input = parsed.data
 
     try {
-      const output = await analyzeWithGemini(
-        buildParts(input, crypto.randomUUID()),
-        env,
-      )
-      const scansSent = (input.scans?.length ?? 0) > 0
-
-      // fileName, pages i skippedPages podaje przeglądarka, nie model
-      const result: AnalysisResult = {
-        ...output,
-        document: {
-          ...output.document,
-          fileName: input.fileName,
-          pages: input.pages,
-        },
-        amounts: filterUngroundedAmounts(output.amounts, input.text, scansSent),
-        skippedPages: input.skippedPages,
-      }
-      return reply(result, 200)
+      return reply(await analyzeDocument(input, env), 200)
     } catch (error) {
       if (error instanceof AnalysisError) {
         return reply({ error: error.message }, error.status)
@@ -96,3 +90,53 @@ export default {
     }
   },
 } satisfies ExportedHandler<Env>
+
+async function analyzeDocument(
+  input: AnalyzeRequest,
+  env: Env,
+): Promise<AnalysisResult> {
+  const signal = AbortSignal.timeout(ANALYSIS_TIME_LIMIT_MS)
+  const chunks = splitIntoChunks(input.text, input.scans ?? [])
+
+  let output: ModelOutput
+  if (chunks.length === 1) {
+    output = await analyzeWithGemini(
+      buildParts(chunks[0], crypto.randomUUID()),
+      env,
+      signal,
+    )
+  } else {
+    // Długi dokument: fragmenty równolegle, potem jedno krótkie wywołanie na podsumowanie całości
+    const partials = await Promise.all(
+      chunks.map((chunk, i) =>
+        analyzeWithGemini(
+          buildParts(chunk, crypto.randomUUID(), {
+            index: i + 1,
+            total: chunks.length,
+          }),
+          env,
+          signal,
+        ),
+      ),
+    )
+    const summary = await summarizeWithGemini(
+      buildSummaryParts(partials, crypto.randomUUID()),
+      env,
+      signal,
+    )
+    output = { ...mergeChunkResults(partials), ...summary }
+  }
+
+  // fileName, pages i skippedPages podaje przeglądarka, nie model
+  const scansSent = (input.scans?.length ?? 0) > 0
+  return {
+    ...output,
+    document: {
+      ...output.document,
+      fileName: input.fileName,
+      pages: input.pages,
+    },
+    amounts: filterUngroundedAmounts(output.amounts, input.text, scansSent),
+    skippedPages: input.skippedPages,
+  }
+}

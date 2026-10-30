@@ -47,6 +47,19 @@ describe('filterUngroundedAmounts', () => {
     ).toEqual([])
   })
 
+  it('kwota z tekstu oznaczona przez model jako "ocr" dostaje source "text"', () => {
+    expect(
+      filterUngroundedAmounts([amount(12500, 'ocr')], text, false),
+    ).toEqual([amount(12500, 'text')])
+    expect(filterUngroundedAmounts([amount(12500, 'ocr')], text, true)).toEqual(
+      [amount(12500, 'text')],
+    )
+  })
+
+  it('usuwa kwotę spoza tekstu oznaczoną "text", nawet gdy były skany', () => {
+    expect(filterUngroundedAmounts([amount(99000)], text, true)).toEqual([])
+  })
+
   it('porównuje wartość bezwzględną (np. rabat zapisany jako ujemny)', () => {
     expect(filterUngroundedAmounts([amount(-12500)], text, false)).toHaveLength(
       1,
