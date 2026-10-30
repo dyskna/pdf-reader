@@ -48,3 +48,14 @@ pre {
 .warning {
   border-color: #e9a400;
 }
+
+.consent {
+  padding: 1rem;
+  border: 2px solid #e9a400;
+  border-radius: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}

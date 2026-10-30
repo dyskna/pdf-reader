@@ -4,9 +4,19 @@ import {
   initialState,
   type AnalysisState,
 } from './analysisState'
+import type { PdfContent } from './pdf/readPdf'
 import type { AnalysisResult } from './schema'
 
 const file = new File(['%PDF-'], 'umowa.pdf', { type: 'application/pdf' })
+
+const pdf: PdfContent = {
+  pages: 2,
+  pageTexts: [
+    { page: 1, text: 'Umowa o dzieło' },
+    { page: 2, text: '' },
+  ],
+  scanPages: [2],
+}
 
 const result: AnalysisResult = {
   document: {
@@ -27,15 +37,25 @@ const result: AnalysisResult = {
 }
 
 describe('analysisReducer', () => {
-  it('przechodzi przez wszystkie etapy do wyniku', () => {
+  it('bez skanów: odczyt › analiza › wynik', () => {
     let state = analysisReducer(initialState, { type: 'started', file })
     expect(state).toEqual({ status: 'reading', file })
 
-    state = analysisReducer(state, { type: 'textRead' })
+    state = analysisReducer(state, { type: 'analysisStarted' })
     expect(state).toEqual({ status: 'analyzing', file })
 
     state = analysisReducer(state, { type: 'succeeded', result })
     expect(state).toEqual({ status: 'success', file, result })
+  })
+
+  it('ze skanami: odczyt › pytanie o zgodę › analiza', () => {
+    let state = analysisReducer(initialState, { type: 'started', file })
+
+    state = analysisReducer(state, { type: 'scansFound', pdf })
+    expect(state).toEqual({ status: 'askingConsent', file, pdf })
+
+    state = analysisReducer(state, { type: 'analysisStarted' })
+    expect(state).toEqual({ status: 'analyzing', file })
   })
 
   it('błąd w trakcie analizy zachowuje plik do ponowienia', () => {
@@ -44,6 +64,12 @@ describe('analysisReducer', () => {
       type: 'failed',
       message: 'Błąd',
     })
+    expect(state).toEqual({ status: 'error', file, message: 'Błąd' })
+  })
+
+  it('błąd przy pytaniu o zgodę też zachowuje plik', () => {
+    const asking: AnalysisState = { status: 'askingConsent', file, pdf }
+    const state = analysisReducer(asking, { type: 'failed', message: 'Błąd' })
     expect(state).toEqual({ status: 'error', file, message: 'Błąd' })
   })
 
@@ -60,7 +86,10 @@ describe('analysisReducer', () => {
   })
 
   it('ignoruje zdarzenie z niewłaściwego etapu', () => {
-    expect(analysisReducer(initialState, { type: 'textRead' })).toBe(
+    expect(analysisReducer(initialState, { type: 'analysisStarted' })).toBe(
+      initialState,
+    )
+    expect(analysisReducer(initialState, { type: 'scansFound', pdf })).toBe(
       initialState,
     )
   })

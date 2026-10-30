@@ -10,9 +10,11 @@ export default defineConfig([
     '**/dist',
     '**/.wrangler',
     'worker/worker-configuration.d.ts',
+    // Pliki pdf.js kopiowane przez web/scripts/copy-pdfjs.mjs
+    'web/public/pdfjs',
   ]),
   {
-    files: ['**/*.{js,ts,tsx}'],
+    files: ['**/*.{js,mjs,ts,tsx}'],
     extends: [js.configs.recommended, tseslint.configs.recommended],
     rules: {
       // Twarde zasady z CLAUDE.md
@@ -37,7 +39,7 @@ export default defineConfig([
     languageOptions: { globals: globals.serviceworker },
   },
   {
-    files: ['*.js', 'web/vite.config.ts'],
+    files: ['*.js', 'web/vite.config.ts', 'web/scripts/**'],
     languageOptions: { globals: globals.node },
   },
   // Na końcu: wyłącza reguły stylu, którymi zajmuje się Prettier

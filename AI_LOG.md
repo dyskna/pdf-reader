@@ -51,3 +51,28 @@ _Zostaną uzupełnione w etapie 7._
 - Rzucało nowe błędy bez `cause`. Wyłapał ESLint (`preserve-caught-error`), dodane `{ cause }`.
 - Separator kolumn nie działał na prawdziwym PDF-ie: pdf.js wstawia elementy-spacje wypełniające przerwę, a testy jednostkowe tego nie przewidziały. Wyłapał ręczny test na wygenerowanym PDF-ie; poprawiona logika i dodane 2 testy.
 - Pierwsza poprawka (`previous = { ...previous }` w pętli) dała błąd TS2698. Wyłapał typecheck, zastąpione flagą `endOfLine`.
+
+## Etap 3: analiza AI w Workerze (2026-10-29, 23:37)
+
+**Prompt / polecenie:** „Na potrzeby mvp darmowy tier. model gemini to jakiś default, nie widze go w dashboard. działamy na tym co mamy. go” (akceptacja planu etapu 3 po przeglądzie dokumentacji Gemini i Cloudflare).
+
+**Co zrobiło AI:** Sprawdziło w aktualnej dokumentacji limity obrazów Gemini, structured output, warunki darmowego tieru i rate limiting Cloudflare. Zbudowało analizę w Workerze: walidację żądania z limitami, rate limit per IP, prompt z ochroną przed prompt injection, wywołanie Gemini ze schematem JSON generowanym z Zoda, walidację z 1 ponowną próbą i filtr ugruntowania kwot. W przeglądarce dodało pytanie o zgodę na skany i renderowanie wybranych stron do JPEG przez pdf.js. Przetestowało całość na prawdziwym Gemini przez `wrangler dev` (tekst, próba injection, OCR aneksu, rate limit).
+
+**Decyzje:**
+
+- Darmowy tier Gemini na potrzeby MVP (decyzja użytkownika), mimo zapisu w warunkach, że dla użytkowników z EOG wymagany jest płatny tier; trafi do README jako znane ograniczenie.
+- Model `gemini-3.5-flash-lite` zamiast planowanego `gemini-3.8-flash`: pomiar na żywo pokazał, że 3.8 Flash na darmowym tierze zwracał 503 lub nie odpowiadał w 60 s, a Flash-Lite odpowiadał w 2–4 s z porównywalną jakością i poprawnym OCR.
+- Gemini wołany zwykłym `fetch` (bez SDK), schemat odpowiedzi z `z.toJSONSchema()` — jedna definicja w Zodzie; Gemini przyjął go bez zmian.
+- Tekst dokumentu w ogranicznikach z losowym znacznikiem (`crypto.randomUUID`), instrukcja systemowa po angielsku.
+- Filtr kwot czyta polskie i angielskie zapisy liczb; kwoty `ocr` nie są filtrowane tylko wtedy, gdy skany były wysłane.
+- `secrets.required` w `wrangler.jsonc`, żeby typy Workera nie zależały od lokalnego `.dev.vars`.
+- Base64 skanów sprawdzany tylko długością (regex przy kilku MB przekroczyłby limit 10 ms CPU).
+
+**Gdzie AI się pomyliło i jak poprawiono:**
+
+- (Z końca etapu 2) AI przepuściło `format:check` przez `| tail -1`, co ukryło kod błędu, i wypchnęło commit z AI_LOG niezgodny z Prettierem. Poprawione osobnym commitem; od tej pory kody wyjścia nie są maskowane.
+- Narzędzie zapisu plików zamieniło sekwencje `\u00a0`/`\u202f` w wyrażeniu regularnym na niewidoczne znaki spacji. Wyłapał ESLint (`no-irregular-whitespace`). Pierwsza poprawka przez `sed` zgubiła ukośniki (10 testów nie przeszło); druga, skryptem Node, przywróciła escape'y.
+- ESLint lintował skopiowane pliki pdf.js w `web/public/pdfjs/` (błędy i spowolnienie). Folder dodany do ignorowanych.
+- Usunięcie `worker/src/sample.ts` (wcześniej `git rm`) trafiło do commita ze schematem zamiast do commita Workera. Zostawione, żeby nie przepisywać historii.
+- Błąd 503 z Gemini był mapowany na ogólny komunikat zamiast „usługa przeciążona”. Wyłapał test na żywo; poprawione z nowym testem.
+- Pierwszy wybór modelu (`gemini-3.8-flash`) okazał się przeciążony na darmowym tierze. Wyłapał test na żywo (504 po 28 s); zmiana na Flash-Lite po pomiarze 5 wariantów.
