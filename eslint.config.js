@@ -12,6 +12,9 @@ export default defineConfig([
     'worker/worker-configuration.d.ts',
     // Pliki pdf.js kopiowane przez web/scripts/copy-pdfjs.mjs
     'web/public/pdfjs',
+    // Eksport z Claude Design i lokalne skille agentów
+    'design',
+    '.agents',
   ]),
   {
     files: ['**/*.{js,mjs,ts,tsx}'],
