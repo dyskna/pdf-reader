@@ -17,6 +17,7 @@ Output rules:
 - Dates in ISO 8601 format (YYYY-MM-DD). Currencies as ISO 4217 codes (for example "zł" means "PLN").
 - amounts: value as a plain number (for example "12 500,00 zł" means 12500). Set source to "ocr" only for amounts read from attached page images, otherwise "text".
 - If page images are attached, they are part of the document. Include their content (for example an annex that changes the contract) in summary and keyPoints.
+- Do not treat repeated headers, footers, page numbers or watermarks (for example "POUFNE") as key points.
 - document.type: "faktura" (invoice), "umowa" (contract), "oferta" (offer), "raport" (report) or "inne" (other).`
 
 export type GeminiPart =
