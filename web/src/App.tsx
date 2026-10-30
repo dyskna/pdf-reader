@@ -1,12 +1,29 @@
+import { useState } from 'react'
 import { FileDrop } from './components/FileDrop'
+import { HistoryList } from './components/HistoryList'
 import { ResultPreview } from './components/ResultPreview'
 import { ScanConsent } from './components/ScanConsent'
 import { ErrorMessage, LoadingStatus } from './components/StatusView'
+import { useHistory } from './hooks/useHistory'
 import { usePdfAnalysis } from './hooks/usePdfAnalysis'
+import type { HistoryEntry } from './lib/history'
 
 // Interfejs roboczy. Wygląd przyjdzie w etapie 5.
 export default function App() {
-  const { state, analyzeFile, retry, sendScans, skipScans } = usePdfAnalysis()
+  const history = useHistory()
+  const { state, analyzeFile, retry, sendScans, skipScans } = usePdfAnalysis(
+    history.add,
+  )
+  // Wynik otwarty z historii; nowa analiza go zamyka
+  const [selected, setSelected] = useState<HistoryEntry | null>(null)
+
+  function handleFile(file: File) {
+    setSelected(null)
+    void analyzeFile(file)
+  }
+
+  const shownResult =
+    selected?.result ?? (state.status === 'success' ? state.result : null)
 
   return (
     <main>
@@ -21,16 +38,25 @@ export default function App() {
           onSkip={skipScans}
         />
       ) : (
-        <FileDrop onFile={analyzeFile} />
+        <FileDrop onFile={handleFile} />
       )}
 
-      {state.status === 'error' && (
+      {state.status === 'error' && !selected && (
         <ErrorMessage
           message={state.message}
           onRetry={state.file ? retry : undefined}
         />
       )}
-      {state.status === 'success' && <ResultPreview result={state.result} />}
+      {shownResult && <ResultPreview result={shownResult} />}
+
+      <HistoryList
+        entries={history.entries}
+        onSelect={setSelected}
+        onClear={() => {
+          setSelected(null)
+          history.clear()
+        }}
+      />
     </main>
   )
 }

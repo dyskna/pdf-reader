@@ -5,10 +5,11 @@ import { buildDocumentText } from '../lib/pdf/pages'
 import { readPdf, type PdfContent } from '../lib/pdf/readPdf'
 import { MAX_SCANS, renderScans } from '../lib/pdf/renderScans'
 import { validateFile } from '../lib/pdf/validateFile'
+import type { AnalysisResult } from '../lib/schema'
 
 // Cała logika ekranu: walidacja › odczyt PDF › zgoda na skany › analiza.
-// Komponenty tylko wyświetlają stan.
-export function usePdfAnalysis() {
+// Komponenty tylko wyświetlają stan. onSuccess dostaje każdy udany wynik (np. do historii).
+export function usePdfAnalysis(onSuccess: (result: AnalysisResult) => void) {
   const [state, dispatch] = useReducer(analysisReducer, initialState)
 
   function fail(error: unknown) {
@@ -61,6 +62,7 @@ export function usePdfAnalysis() {
       scans,
     })
     dispatch({ type: 'succeeded', result })
+    onSuccess(result)
   }
 
   function decideScans(withScans: boolean) {

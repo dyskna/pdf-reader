@@ -59,3 +59,14 @@ pre {
   display: flex;
   gap: 0.5rem;
 }
+
+.history {
+  list-style: none;
+  padding: 0;
+}
+
+.history button {
+  width: 100%;
+  margin-bottom: 0.25rem;
+  text-align: left;
+}
