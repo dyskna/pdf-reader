@@ -24,21 +24,41 @@ export function extractNumbers(text: string): number[] {
   return numbers
 }
 
+// Słowa skali („212,4 mln zł”, nagłówek tabeli „(mln zł)”) i ich mnożniki.
+// Model podaje pełną wartość (212400000), a w tekście jest 212,4.
+const SCALES: [RegExp, number][] = [
+  [/tys\.|tysi[ęą]c|thousand/i, 1e3],
+  [/mln|milion|million/i, 1e6],
+  [/mld|miliard|billion/i, 1e9],
+]
+
 // Filtr ugruntowania: usuwa kwoty, których wartości nie ma w tekście z pdf.js.
 // Źródło ustalamy sami, bo model potrafi oznaczyć kwotę z tekstu jako "ocr":
 // - kwota jest w tekście: zostaje, source "text";
 // - nie ma jej w tekście, ale model wskazał skan i skany były wysłane: zostaje, source "ocr"
 //   (tekstu skanu nie znamy, więc nie da się jej sprawdzić);
 // - w pozostałych przypadkach kwota jest usuwana.
+// Kwotę w tysiącach, milionach albo miliardach uznajemy tylko wtedy, gdy dokument
+// w ogóle używa danej skali (np. słowa „mln”).
 export function filterUngroundedAmounts(
   amounts: Amount[],
   documentText: string,
   scansSent: boolean,
 ): Amount[] {
   const numbers = extractNumbers(documentText)
+  const scales = [
+    1,
+    ...SCALES.filter(([word]) => word.test(documentText)).map(
+      ([, scale]) => scale,
+    ),
+  ]
+  const isInText = (value: number) =>
+    scales.some((scale) =>
+      numbers.some((number) => Math.abs(number - value / scale) < 0.005),
+    )
+
   return amounts.flatMap((amount): Amount[] => {
-    const value = Math.abs(amount.value)
-    if (numbers.some((number) => Math.abs(number - value) < 0.005)) {
+    if (isInText(Math.abs(amount.value))) {
       return [{ ...amount, source: 'text' }]
     }
     return amount.source === 'ocr' && scansSent ? [amount] : []

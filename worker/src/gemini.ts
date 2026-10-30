@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { modelOutputSchema, type ModelOutput } from '../../web/src/lib/schema'
+import { normalizeModelOutput } from './normalize'
 import {
   SUMMARY_INSTRUCTION,
   SYSTEM_INSTRUCTION,
@@ -54,6 +55,8 @@ export function analyzeWithGemini(
   const request = {
     systemInstruction: SYSTEM_INSTRUCTION,
     jsonSchema: analysisJsonSchema,
+    // Poprawia drobne odchylenia modelu (np. waluta "zł") przed walidacją
+    prepare: normalizeModelOutput,
     parts,
   }
   return generateValidated(modelOutputSchema, request, env, signal)
@@ -74,6 +77,7 @@ export function summarizeWithGemini(
 }
 
 type GeminiRequest = {
+  prepare?: (output: unknown) => unknown
   systemInstruction: string
   jsonSchema: unknown
   parts: GeminiPart[]
@@ -87,7 +91,8 @@ async function generateValidated<T>(
   signal: AbortSignal,
 ): Promise<T> {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const output = await callGemini(request, env, signal)
+    const raw = await callGemini(request, env, signal)
+    const output = request.prepare ? request.prepare(raw) : raw
     const parsed = schema.safeParse(output)
     if (parsed.success) return parsed.data
 

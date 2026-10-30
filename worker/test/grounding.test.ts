@@ -66,3 +66,40 @@ describe('filterUngroundedAmounts', () => {
     )
   })
 })
+
+describe('filterUngroundedAmounts: kwoty w tysiącach, milionach, miliardach', () => {
+  const amount = (value: number) => ({
+    value,
+    currency: 'PLN',
+    context: 'Nakłady',
+    source: 'ocr' as const,
+  })
+
+  it('uznaje pełną wartość, gdy dokument podaje kwoty w mln (nagłówek tabeli)', () => {
+    const text = 'Projekt | Nakłady 2025 (mln zł)\nFarma Dębica II | 212,4'
+    expect(filterUngroundedAmounts([amount(212_400_000)], text, true)).toEqual([
+      { ...amount(212_400_000), source: 'text' },
+    ])
+  })
+
+  it('uznaje zapis „4,82 mld zł”', () => {
+    const text = 'Przychody wzrosły do 4,82 mld zł.'
+    expect(
+      filterUngroundedAmounts([amount(4_820_000_000)], text, false),
+    ).toHaveLength(1)
+  })
+
+  it('nie skaluje, gdy dokument nie używa słowa skali', () => {
+    const text = 'Wynagrodzenie: 212,4 zł'
+    expect(filterUngroundedAmounts([amount(212_400_000)], text, false)).toEqual(
+      [],
+    )
+  })
+
+  it('usuwa zmyśloną kwotę mimo słowa „mln” w dokumencie', () => {
+    const text = 'Nakłady (mln zł): 212,4'
+    expect(filterUngroundedAmounts([amount(99_000_000)], text, false)).toEqual(
+      [],
+    )
+  })
+})
