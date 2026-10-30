@@ -120,3 +120,23 @@ _Zostaną uzupełnione w etapie 7._
 - Strefa upuszczania gasła przy najechaniu na przycisk w środku (`dragleave` z elementów potomnych). AI zauważyło to przy przeglądzie kodu; poprawione sprawdzeniem `relatedTarget`.
 - W nowej palecie szary tekst na jaśniejszym polu miał kontrast 4,43:1 (poniżej AA). Wyłapało obliczenie kontrastu przed wdrożeniem; kolor przyciemniony.
 - Po zmianie palety stan przeciągania pliku był prawie niewidoczny. Wyłapał zrzut ekranu; dodany jasnozielony odcień tła.
+
+## Etap 6: wyniki i bezpieczeństwo (2026-10-30, 12:42)
+
+**Prompt / polecenie:** „ok” (akceptacja zapowiedzianego planu etapu 6: pełny widok wyników, „Pobierz JSON”, leniwe ładowanie pdf.js, przegląd bezpieczeństwa), potem „csp mozesz dodać”.
+
+**Co zrobiło AI:** Dodało do widoku wyników sekcje kluczowych punktów, podmiotów i słów kluczowych w stylu projektu oraz przycisk „Pobierz JSON” (plik tworzony w przeglądarce). Przeniosło ładowanie pdf.js na moment wyboru pliku, co zmniejszyło paczkę startową z ok. 751 kB do 323 kB, i dodało Content-Security-Policy do buildu produkcyjnego. Przejrzało całe repo i historię git pod kątem `any`, `console.log`, `dangerouslySetInnerHTML` i sekretów, porównując prawdziwy klucz z historią, paczkami i plikami bez wypisywania jego wartości. Nic nie znalazło.
+
+**Decyzje:**
+
+- Pobieranie JSON przez `Blob` i link z atrybutem `download` (wbudowane API, bez zależności); nazwa `<nazwa-pdf>-analiza.json`.
+- `readPdf` i `renderScans` importowane dynamicznie; `MAX_SCANS` w osobnym `limits.ts`, żeby ekrany nie ciągnęły pdf.js.
+- CSP jako `<meta>` (GitHub Pages nie ustawia nagłówków), wstrzykiwany tylko w buildzie; `connect-src` ograniczony do własnej domeny i Workera, `'wasm-unsafe-eval'` dla dekoderów obrazów pdf.js. Sprawdzony w Edge na buildzie produkcyjnym z prawdziwym skanem: brak naruszeń.
+- `console.warn`/`console.error` w Workerze zostają (logi błędów bez treści dokumentu); zakaz z CLAUDE.md dotyczy `console.log`.
+
+**Gdzie AI się pomyliło i jak poprawiono:**
+
+- Funkcja nazwy pliku dawała podwójny myślnik, gdy niedozwolony znak był na końcu („wersja?” → „wersja--analiza”). Wyłapał test; dodane usuwanie myślników z brzegów.
+- Przy tej poprawce narzędzie wykonujące polecenia zgubiło ukośnik w wyrażeniu regularnym (`[-s]` zamiast `[-\s]`), przez co z końca nazwy znikałyby litery „s”. Test przeszedł przypadkiem; AI zauważyło to w wyniku polecenia, poprawiło bezpośrednią edycją i dodało test „faktury.pdf”.
+- Pierwsze uruchomienie skryptu sprawdzającego klucz nie zadziałało (Node na Windows nie widzi bashowego `/tmp`). Powtórzone z plikiem w folderze roboczym.
+- AI założyło, że pdf.js sprawdza `eval()` i dodało opcję `isEvalSupported: false`. Wyłapał typecheck: w pdf.js 6 tej opcji nie ma, bo biblioteka nie używa już `eval`. Linia usunięta.
