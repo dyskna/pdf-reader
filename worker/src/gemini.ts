@@ -1,13 +1,24 @@
 import { z } from 'zod'
 import { modelOutputSchema, type ModelOutput } from '../../web/src/lib/schema'
-import { SYSTEM_INSTRUCTION, type GeminiPart } from './prompt'
+import {
+  SUMMARY_INSTRUCTION,
+  SYSTEM_INSTRUCTION,
+  type GeminiPart,
+} from './prompt'
 
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
-const TIME_LIMIT_MS = 28_000 // wspólny dla obu prób, żeby zmieścić się w 30 s
 const MAX_ATTEMPTS = 2 // pierwsza próba + 1 ponowna
 
-// Schemat odpowiedzi dla Gemini generowany z Zoda, żeby nie trzymać drugiej kopii.
-const responseJsonSchema = z.toJSONSchema(modelOutputSchema)
+// Wspólny limit na całą analizę (wszystkie wywołania i ponowne próby), żeby zmieścić się w 30 s
+export const ANALYSIS_TIME_LIMIT_MS = 28_000
+
+// Końcowe podsumowanie długiego dokumentu: tylko summary i keyPoints
+const summarySchema = modelOutputSchema.pick({ summary: true, keyPoints: true })
+export type Summary = z.infer<typeof summarySchema>
+
+// Schematy odpowiedzi dla Gemini generowane z Zoda, żeby nie trzymać drugiej kopii.
+const analysisJsonSchema = z.toJSONSchema(modelOutputSchema)
+const summaryJsonSchema = z.toJSONSchema(summarySchema)
 
 // Interesuje nas tylko tekst odpowiedzi. Reszta pól Gemini jest pomijana.
 const geminiResponseSchema = z.object({
@@ -34,15 +45,50 @@ export class AnalysisError extends Error {
 
 type GeminiEnv = Pick<Env, 'GEMINI_API_KEY' | 'GEMINI_MODEL'>
 
-export async function analyzeWithGemini(
+// Analiza dokumentu albo jednego fragmentu długiego dokumentu
+export function analyzeWithGemini(
   parts: GeminiPart[],
   env: GeminiEnv,
+  signal: AbortSignal,
 ): Promise<ModelOutput> {
-  const signal = AbortSignal.timeout(TIME_LIMIT_MS)
+  const request = {
+    systemInstruction: SYSTEM_INSTRUCTION,
+    jsonSchema: analysisJsonSchema,
+    parts,
+  }
+  return generateValidated(modelOutputSchema, request, env, signal)
+}
 
+// Końcowe podsumowanie z podsumowań fragmentów
+export function summarizeWithGemini(
+  parts: GeminiPart[],
+  env: GeminiEnv,
+  signal: AbortSignal,
+): Promise<Summary> {
+  const request = {
+    systemInstruction: SUMMARY_INSTRUCTION,
+    jsonSchema: summaryJsonSchema,
+    parts,
+  }
+  return generateValidated(summarySchema, request, env, signal)
+}
+
+type GeminiRequest = {
+  systemInstruction: string
+  jsonSchema: unknown
+  parts: GeminiPart[]
+}
+
+// Wywołanie z walidacją Zodem i 1 ponowną próbą przy niepoprawnej odpowiedzi
+async function generateValidated<T>(
+  schema: z.ZodType<T>,
+  request: GeminiRequest,
+  env: GeminiEnv,
+  signal: AbortSignal,
+): Promise<T> {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const output = await callGemini(parts, env, signal)
-    const parsed = modelOutputSchema.safeParse(output)
+    const output = await callGemini(request, env, signal)
+    const parsed = schema.safeParse(output)
     if (parsed.success) return parsed.data
 
     // Logujemy tylko ścieżki pól z błędem, bez treści dokumentu
@@ -57,7 +103,7 @@ export async function analyzeWithGemini(
 
 // Zwraca odpowiedź modelu jako obiekt z JSON-a albo null, gdy to nie jest JSON.
 async function callGemini(
-  parts: GeminiPart[],
+  request: GeminiRequest,
   env: GeminiEnv,
   signal: AbortSignal,
 ): Promise<unknown> {
@@ -72,11 +118,11 @@ async function callGemini(
           'x-goog-api-key': env.GEMINI_API_KEY,
         },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-          contents: [{ role: 'user', parts }],
+          systemInstruction: { parts: [{ text: request.systemInstruction }] },
+          contents: [{ role: 'user', parts: request.parts }],
           generationConfig: {
             responseMimeType: 'application/json',
-            responseJsonSchema,
+            responseJsonSchema: request.jsonSchema,
             temperature: 0.2,
           },
         }),

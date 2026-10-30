@@ -10,7 +10,7 @@ const allowedOrigin = 'https://dyskna.github.io'
 function makeEnv(rateLimitOk = true): Env {
   return {
     ALLOWED_ORIGIN: allowedOrigin,
-    GEMINI_MODEL: 'gemini-3.5-flash-lite',
+    GEMINI_MODEL: 'gemini-3.1-flash-lite',
     GEMINI_API_KEY: 'test-key',
     RATE_LIMITER: { limit: async () => ({ success: rateLimitOk }) },
   }
@@ -228,5 +228,56 @@ describe('POST /analyze: ochrona i walidacja', () => {
       makeEnv(),
     )
     expect(response.status).toBe(404)
+  })
+})
+
+describe('POST /analyze: długi dokument', () => {
+  it('analizuje fragmenty równolegle i scala wynik z końcowym podsumowaniem', async () => {
+    // 3 strony po ok. 25 000 znaków: każda w osobnym fragmencie (limit 40 000),
+    // czyli 3 wywołania na fragmenty + 1 na końcowe podsumowanie
+    const longPage = (number: number, fact: string) =>
+      `[Strona ${number}]\n${fact}\n${'x '.repeat(12_500)}`
+    const text = [
+      longPage(1, 'Wynagrodzenie: 12 500,00 zł'),
+      longPage(2, 'Kara umowna: 1 000,00 zł'),
+      longPage(3, 'Postanowienia końcowe'),
+    ].join('\n\n')
+
+    const part = (organization: string, amounts: ModelOutput['amounts']) =>
+      JSON.stringify({
+        ...modelOutput,
+        entities: { organizations: [organization], people: [] },
+        amounts,
+      })
+    const fetchMock = mockGemini(
+      part('ACME sp. z o.o.', [modelOutput.amounts[0]]),
+      part('Bank XYZ', [
+        { value: 1000, currency: 'PLN', context: 'Kara', source: 'text' },
+      ]),
+      part('ACME sp. z o.o.', []),
+      JSON.stringify({
+        summary: 'Podsumowanie całości.',
+        keyPoints: ['Pierwszy', 'Drugi', 'Trzeci'],
+      }),
+    )
+
+    const response = await worker.fetch(
+      request('POST', allowedOrigin, { ...validBody, text }),
+      makeEnv(),
+    )
+
+    expect(response.status).toBe(200)
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+    const result = analysisResultSchema.parse(await response.json())
+    expect(result.summary).toBe('Podsumowanie całości.')
+    expect(result.entities.organizations).toEqual([
+      'ACME sp. z o.o.',
+      'Bank XYZ',
+    ])
+    expect(result.amounts.map((amount) => amount.value)).toEqual([12500, 1000])
+
+    // Ostatnie wywołanie to podsumowanie z podsumowań fragmentów
+    const lastBody = String(fetchMock.mock.calls[3][1]?.body)
+    expect(lastBody).toContain('Combine the partial analyses')
   })
 })
