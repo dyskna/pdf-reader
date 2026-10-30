@@ -14,8 +14,10 @@ Output rules:
 - Write all text values (title, summary, keyPoints, contexts, keywords) in the main language of the document.
 - summary: 3-5 sentences. keyPoints: 3-7 items.
 - Use only information present in the document. If something is missing, use null or an empty array. Do not guess.
-- Dates in ISO 8601 format (YYYY-MM-DD). Currencies as ISO 4217 codes (for example "zł" means "PLN").
-- amounts: value as a plain number (for example "12 500,00 zł" means 12500). Set source to "ocr" only for amounts read from attached page images, otherwise "text".
+- Dates in ISO 8601 format (YYYY-MM-DD).
+- amounts: only monetary values with a currency. Areas (m²), power (kW), percentages and other quantities are not amounts.
+- amounts.currency: only the 3-letter ISO 4217 code (for example "zł" means "PLN"). Units such as "per m²" or "per month" belong in context, never in currency.
+- amounts.value: a plain number in full units (for example "12 500,00 zł" means 12500 and "212,4 mln zł" means 212400000). Set source to "ocr" only for amounts read from attached page images, otherwise "text".
 - If page images are attached, they are part of the document. Include their content (for example an annex that changes the contract) in summary and keyPoints.
 - Do not treat repeated headers, footers, page numbers or watermarks (for example "POUFNE") as key points.
 - document.type: "faktura" (invoice), "umowa" (contract), "oferta" (offer), "raport" (report) or "inne" (other).`
