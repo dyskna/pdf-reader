@@ -97,3 +97,26 @@ _Zostaną uzupełnione w etapie 7._
 - `gemini-3.1-flash-lite` oznaczał kwoty z tekstu jako `source: "ocr"` mimo braku skanów. Wyłapał test na żywo; źródło ustala teraz kod, dodane 2 testy.
 - AI najpierw umieściło zapis do localStorage w funkcji aktualizującej stan React (wywoływanej dwukrotnie w StrictMode). Zauważyło to przed uruchomieniem i przeniosło zapis do `useEffect`.
 - Skrypt dzielący zmiany na commity miał błąd w wyrażeniu regularnym (`^` bez flagi `m`), przez co jedna linia zmiany modelu w teście trafiła do innego commita. Commit `071cdfc` sam w sobie nie przechodzi typechecku; stan końcowy jest poprawny.
+
+## Etap 5: interfejs z Claude Design (2026-10-30, 12:29)
+
+**Prompt / polecenie:** „przechodzimy do etapu 5. zostaw tamto. tu zip z designem. zaimplementuj go czysto.”, potem „go for it” (akceptacja planu: czcionki przez Fontsource, sekcje wyników spoza makiety w etapie 6, zrzuty ekranu przed PR), „pokaz mi to lokalnie” oraz „zmien kolory strony na jakieś pasujące do siebie. użyj do tego skilli”. Wcześniej użytkownik poprosił o prompt do Claude Design z naciskiem na brak „AI look”, niestandardowe czcionki i intuicyjny układ.
+
+**Co zrobiło AI:** Rozpakowało eksport do `design/` i opisało go (jeden kierunek „Szałwia na marginesie”, jeden ekran wyniku, tokeny, czcionki). Przeniosło tokeny i style do `web/src/styles/` i zbudowało komponenty React dla wszystkich stanów, także tych, których w projekcie nie było (start, przeciąganie, walidacja, ładowanie, zgoda na skan, błąd serwera, historia). Na prośbę użytkownika zmieniło kolory na paletę z biblioteki skilla `design-taste-frontend`. Sprawdziło całość w Edge przez Playwright z podstawioną odpowiedzią Workera: desktop i 360 px, fokus z klawiatury, renderowanie skanu w przeglądarce.
+
+**Decyzje:**
+
+- Czcionki self-hosted przez Fontsource zamiast Google Fonts: przeglądarka nie łączy się z Google (spójne z obietnicą prywatności).
+- Nawigacja stanem w `App.tsx`, bez routera; przyciski z `aria-current` wyglądające jak linki z projektu.
+- Kolory: paleta „Bone, green, chocolate” (kość, czekolada, zieleń tylko na marginesie i przyciskach) zamiast kremu, szałwii i granatu z projektu, które mieszały trzy temperatury barw; układ i typografia projektu bez zmian. Kontrast tekstu min. 4,95:1.
+- Skill `ui-ux-pro-max` użyty tylko przez przegląd jego danych CSV (wyszukiwarka wymaga Pythona, którego nie ma); jego propozycje (granat i szarości) odrzucone jako typowe.
+- Przycisk „Pobierz JSON” i sekcje kluczowych punktów, podmiotów i słów kluczowych w etapie 6 (bez nieaktywnych atrap).
+- `design/` i lokalne `.agents/` wyłączone z ESLint i Prettier; eksport zostaje w repo bez zmian.
+
+**Gdzie AI się pomyliło i jak poprawiono:**
+
+- Rozmiar małego pliku wyświetlał się jako „0 MB”. Wyłapał przegląd zrzutów ekranu; poprawione na KB poniżej 1 MB, z testem.
+- Skrypt do zrzutów ekranu miał dwa błędy (o jeden Tab za dużo przy sprawdzaniu fokusu; sztuczne zdarzenie `dragover` nie wywołało obsługi Reacta), przez co dwa zrzuty nie pokazały stanu. Wyłapał przegląd zrzutów; po poprawieniu skryptu oba stany działają.
+- Strefa upuszczania gasła przy najechaniu na przycisk w środku (`dragleave` z elementów potomnych). AI zauważyło to przy przeglądzie kodu; poprawione sprawdzeniem `relatedTarget`.
+- W nowej palecie szary tekst na jaśniejszym polu miał kontrast 4,43:1 (poniżej AA). Wyłapało obliczenie kontrastu przed wdrożeniem; kolor przyciemniony.
+- Po zmianie palety stan przeciągania pliku był prawie niewidoczny. Wyłapał zrzut ekranu; dodany jasnozielony odcień tła.

@@ -82,5 +82,6 @@ export function usePdfAnalysis(onSuccess: (result: AnalysisResult) => void) {
     retry,
     sendScans: () => decideScans(true),
     skipScans: () => decideScans(false),
+    reset: () => dispatch({ type: 'reset' }),
   }
 }

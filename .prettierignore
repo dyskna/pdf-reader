@@ -3,3 +3,7 @@ package-lock.json
 worker/worker-configuration.d.ts
 # CLAUDE.md zmieniamy tylko za zgodą, więc Prettier go nie przepisuje
 CLAUDE.md
+# Eksport z Claude Design zostaje dokładnie taki, jaki przyszedł
+design/
+# Lokalne skille agentów (nie są częścią aplikacji)
+.agents/
