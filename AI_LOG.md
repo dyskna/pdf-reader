@@ -76,3 +76,24 @@ _Zostaną uzupełnione w etapie 7._
 - Usunięcie `worker/src/sample.ts` (wcześniej `git rm`) trafiło do commita ze schematem zamiast do commita Workera. Zostawione, żeby nie przepisywać historii.
 - Błąd 503 z Gemini był mapowany na ogólny komunikat zamiast „usługa przeciążona”. Wyłapał test na żywo; poprawione z nowym testem.
 - Pierwszy wybór modelu (`gemini-3.8-flash`) okazał się przeciążony na darmowym tierze. Wyłapał test na żywo (504 po 28 s); zmiana na Flash-Lite po pomiarze 5 wariantów.
+
+## Etap 4: długie dokumenty i historia (2026-10-30, 10:58)
+
+**Prompt / polecenie:** „rezygnuje z rulesetu. co do poufne - wprowadz taką zasadę jak napisałeś. dopisać do instrukcji systemowej regułę »nie traktuj powtarzających się nagłówków, stopek, numerów stron i znaków wodnych jako kluczowych punktów«. reszta ok”.
+
+**Co zrobiło AI:** Dodało w Workerze analizę długich dokumentów: dzielenie tekstu po granicach stron na fragmenty do 40 000 znaków, równoległe wywołania Gemini, scalanie tablic bez duplikatów i jedno krótkie wywołanie na końcowe podsumowanie, wszystko we wspólnym limicie 28 s. W przeglądarce dodało historię 10 ostatnich analiz w localStorage z obsługą błędów i przyciskiem „Wyczyść historię”. Dopisało regułę o znakach wodnych do instrukcji systemowej. Sprawdziło całość na żywo na syntetycznej umowie (120 000 znaków, 30 stron).
+
+**Decyzje:**
+
+- Dzielenie i scalanie w Workerze, nie w `web/src/lib/` (odstępstwo od listy w „Stacku”): jedno żądanie z przeglądarki = jedna jednostka rate limitu; kontrakt żądania bez zmian.
+- Scalanie: podmioty i słowa kluczowe bez duplikatów (wielkość liter, spacje), kwoty po (wartość, waluta), daty po dacie; język i typ najczęstsze („inne” tylko, gdy nic innego), tytuł i data z pierwszego fragmentu, który je ma.
+- Model `gemini-3.1-flash-lite`: pomiar pokazał, że `gemini-3.5-flash-lite` był tego dnia przeciążony (15–25 s nawet dla krótkiego tekstu, 503), a 3.1 Flash-Lite odpowiadał w ok. 2,5 s.
+- Źródło kwoty (`text`/`ocr`) ustala kod na podstawie tekstu z pdf.js, a nie model.
+- Historia trzyma tylko wyniki (bez tekstu PDF), wpisy walidowane Zodem pojedynczo, zapis w `useEffect`, bez localStorage działa w pamięci.
+
+**Gdzie AI się pomyliło i jak poprawiono:**
+
+- Pierwszy test długiego dokumentu na żywo skończył się 504 po 28 s. AI zmierzyło każde wywołanie osobno i ustaliło, że przyczyną jest przeciążenie modelu na darmowym tierze, a nie kod dzielenia; po pomiarze 6 modeli zmieniło model.
+- `gemini-3.1-flash-lite` oznaczał kwoty z tekstu jako `source: "ocr"` mimo braku skanów. Wyłapał test na żywo; źródło ustala teraz kod, dodane 2 testy.
+- AI najpierw umieściło zapis do localStorage w funkcji aktualizującej stan React (wywoływanej dwukrotnie w StrictMode). Zauważyło to przed uruchomieniem i przeniosło zapis do `useEffect`.
+- Skrypt dzielący zmiany na commity miał błąd w wyrażeniu regularnym (`^` bez flagi `m`), przez co jedna linia zmiany modelu w teście trafiła do innego commita. Commit `071cdfc` sam w sobie nie przechodzi typechecku; stan końcowy jest poprawny.
