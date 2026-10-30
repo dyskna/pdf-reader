@@ -2,12 +2,20 @@
 
 ## Narzędzia
 
-- Claude Code (CLI), model Claude Opus 5.5 (`claude-opus-5-5`)
-- _Reszta (Claude Design i inne) zostanie uzupełniona w etapie 7._
+- **Claude Code** (CLI) z modelem **Claude Opus 5.5** (`claude-opus-5-5`): cała implementacja, testy, PR-y przez `gh` i ten log.
+- **Claude Design**: projekt interfejsu (eksport w `design/export/3a`, kierunek „Szałwia na marginesie”); prompt do Claude Design przygotował Claude Code.
+- **Skille w Claude Code**: `design-taste-frontend` (paleta kolorów i reguły kontrastu), `ui-ux-pro-max` (przegląd danych CSV o paletach), `anthropic-skills:pdf` (wskazówki przy generowaniu testowych PDF-ów).
+- **Google Gemini API** (darmowy tier, ostatecznie `gemini-3.1-flash-lite`): analiza dokumentów.
+- **Narzędzia pomocnicze poza repo**: `playwright-core` z przeglądarką Edge (zrzuty ekranu, testy end-to-end), `pdf-lib` i `@napi-rs/canvas` (testowe PDF-y ze skanami), `wrangler tail` (diagnoza błędów na produkcji).
+- **GitHub** (Actions, Pages, `gh`) i **Cloudflare Workers** (Wrangler).
 
 ## Kluczowe prompty
 
-_Zostaną uzupełnione w etapie 7._
+1. **Plan i zasady pracy** (`CLAUDE.md`) oraz pierwsze polecenie: „Przeczytaj dokładnie CLAUDE.md. […] Streść mi w 5 punktach, jak rozumiesz zadanie i architekturę […] Wypisz pytania lub ryzyka […] Pracujemy etapami: przed każdym pokazujesz plan i czekasz na moje »ok«, po każdym robisz commit, wpis do AI_LOG.md i odhaczasz postęp.”
+2. „sam se rób te pullrequesty, ja je tylko chce zatwierdzac”: od etapu 1 PR-y zakłada AI, człowiek przegląda i merguje.
+3. „Na potrzeby mvp darmowy tier. model gemini to jakiś default, nie widze go w dashboard. działamy na tym co mamy. go”: świadomy kompromis (darmowy tier mimo warunków dla EOG), opisany w README.
+4. „zrób prompta do claude design. zalezy mi na no - ai look, niestandardowych czcionkach i layout-ach, ale bardzo intuicyjnych”: punkt wyjścia projektu interfejsu.
+5. „tu zip z designem. zaimplementuj go czysto.” oraz „zmien kolory strony na jakieś pasujące do siebie. użyj do tego skilli”: wdrożenie projektu i paleta dobrana skillem.
 
 ---
 
@@ -140,3 +148,23 @@ _Zostaną uzupełnione w etapie 7._
 - Przy tej poprawce narzędzie wykonujące polecenia zgubiło ukośnik w wyrażeniu regularnym (`[-s]` zamiast `[-\s]`), przez co z końca nazwy znikałyby litery „s”. Test przeszedł przypadkiem; AI zauważyło to w wyniku polecenia, poprawiło bezpośrednią edycją i dodało test „faktury.pdf”.
 - Pierwsze uruchomienie skryptu sprawdzającego klucz nie zadziałało (Node na Windows nie widzi bashowego `/tmp`). Powtórzone z plikiem w folderze roboczym.
 - AI założyło, że pdf.js sprawdza `eval()` i dodało opcję `isEvalSupported: false`. Wyłapał typecheck: w pdf.js 6 tej opcji nie ma, bo biblioteka nie używa już `eval`. Linia usunięta.
+
+## Etap 7: testy końcowe i dokumentacja (2026-10-30, 14:04)
+
+**Prompt / polecenie:** „wygeneruj mi kilka duzych pdf skomplikowanych takich jak »Test_PDF_Insight_umowa_14-2026.pdf« w celu sprawdzenia”, potem „OK” (plan etapu 7 z automatycznymi testami na produkcji) i „OK” (poprawki po testach: waluty, kwoty w mln, favicon).
+
+**Co zrobiło AI:** Wygenerowało trzy testowe PDF-y z trudnościami pliku testowego (umowa najmu 22 strony z ukrytym poleceniem i skanem aneksu, zestawienie 12 faktur, raport roczny 38 stron z rozdziałem po angielsku). Przeprowadziło testy end-to-end na produkcyjnym demo z prawdziwym Gemini, zdiagnozowało błąd walidacji przez `wrangler tail` i poprawiło obsługę walut i kwot w milionach oraz dodało favicon. Napisało README i uzupełniło sekcje „Narzędzia” i „Kluczowe prompty”.
+
+**Decyzje:**
+
+- Testy końcowe na produkcji bez mockowania (za zgodą użytkownika); wyniki zebrane w tabeli w README.
+- Pozycje w `amounts` bez kodu waluty ISO (np. „m²”, „kW”) są usuwane przed walidacją, bo to nie są kwoty pieniężne; pozostałe błędy nadal kończą się 1 ponowną próbą i komunikatem.
+- Filtr kwot uznaje zapis „212,4 mln zł” jako 212400000 tylko wtedy, gdy dokument używa danego słowa skali (tys., mln, mld).
+- Typ „raport” dla zestawienia faktur zostaje: test bez wstrzykniętego polecenia dał ten sam wynik, więc to klasyfikacja, a nie skutek prompt injection.
+- Odpowiedzi 503/504 darmowego tieru opisane w README jako znane ograniczenie, bez dodatkowych ponowień.
+
+**Gdzie AI się pomyliło i jak poprawiono:**
+
+- Pierwsza wersja wygenerowanych PDF-ów była mniejsza, niż prosił użytkownik (29 tys., 8 tys. i 102 tys. znaków). Wyłapało to sprawdzenie odczytu; dokumenty powiększone do 22, 14 i 38 stron.
+- Pierwsza poprawka walut (normalizacja „zł”, „EUR/m²”) nie usunęła błędu. Dopiero zapis odrzuconych wartości w lokalnych testach pokazał, że model wpisuje jako kwoty powierzchnię i moc; dodane usuwanie takich pozycji i reguła w prompcie. Po tym 0 błędów walidacji na 6 prób.
+- Lokalny Worker przez kilka minut nie odpowiadał na żadne zapytanie do Gemini. AI założyło, że winne są jego zmiany, i sprawdzało je (`git stash`, osobny Worker testowy), ale ta sama wersja chwilę później działała poprawnie; zawieszenie było przejściowe po stronie środowiska lokalnego lub Gemini.

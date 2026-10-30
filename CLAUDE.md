@@ -179,4 +179,4 @@ Do AI wysyłamy **tylko to, co konieczne**. Dokumenty bywają poufne, a plik tes
 - [x] Etap 4: długie dokumenty i historia
 - [x] Etap 5: interfejs z Claude Design
 - [x] Etap 6: wyniki i bezpieczeństwo
-- [ ] Etap 7: testy i dokumentacja
+- [x] Etap 7: testy i dokumentacja
