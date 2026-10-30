@@ -2,8 +2,9 @@ import { useReducer } from 'react'
 import { analyze } from '../api/analyze'
 import { analysisReducer, initialState } from '../lib/analysisState'
 import { buildDocumentText } from '../lib/pdf/pages'
-import { readPdf, type PdfContent } from '../lib/pdf/readPdf'
-import { MAX_SCANS, renderScans } from '../lib/pdf/renderScans'
+import { MAX_SCANS } from '../lib/pdf/limits'
+import type { PdfContent } from '../lib/pdf/readPdf'
+import type { ScanImage } from '../lib/pdf/renderScans'
 import { validateFile } from '../lib/pdf/validateFile'
 import type { AnalysisResult } from '../lib/schema'
 
@@ -26,6 +27,8 @@ export function usePdfAnalysis(onSuccess: (result: AnalysisResult) => void) {
 
     dispatch({ type: 'started', file })
     try {
+      // pdf.js (ok. 500 kB) ładujemy dopiero przy pierwszym pliku, nie przy otwarciu strony
+      const { readPdf } = await import('../lib/pdf/readPdf')
       const pdf = await readPdf(file)
       if (pdf.scanPages.length > 0) {
         // Czekamy na decyzję użytkownika: sendScans() albo skipScans()
@@ -51,8 +54,11 @@ export function usePdfAnalysis(onSuccess: (result: AnalysisResult) => void) {
       )
     }
 
-    const scans =
-      pagesToSend.length > 0 ? await renderScans(file, pagesToSend) : undefined
+    let scans: ScanImage[] | undefined
+    if (pagesToSend.length > 0) {
+      const { renderScans } = await import('../lib/pdf/renderScans')
+      scans = await renderScans(file, pagesToSend)
+    }
     const result = await analyze({
       fileName: file.name,
       pages: pdf.pages,

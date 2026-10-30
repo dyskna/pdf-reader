@@ -1,5 +1,5 @@
 import { formatSkippedPages } from '../lib/format'
-import { MAX_SCANS } from '../lib/pdf/renderScans'
+import { MAX_SCANS } from '../lib/pdf/limits'
 
 type Props = {
   fileName: string

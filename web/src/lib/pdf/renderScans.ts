@@ -1,8 +1,5 @@
 import { openPdf } from './pdfjs'
 
-// Tyle samo co limit w Workerze (worker/src/request.ts)
-export const MAX_SCANS = 10
-
 // Około 150 DPI (PDF liczy w punktach, 72 na cal), ale najwyżej 2000 px na dłuższym boku
 const TARGET_SCALE = 150 / 72
 const MAX_SIDE_PX = 2000

@@ -603,3 +603,70 @@ body {
     animation: none !important;
   }
 }
+
+/* Nowe (etap 6): kluczowe punkty, podmioty, słowa kluczowe */
+.key-points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 14px 0 0;
+  list-style: none;
+  counter-reset: point;
+}
+
+.key-points li {
+  display: grid;
+  grid-template-columns: 2.5em minmax(0, 1fr);
+  counter-increment: point;
+}
+
+/* Numer w kroju mono, jak kwoty i daty: 01, 02… */
+.key-points li::before {
+  color: var(--color-ink-muted);
+  font-family: var(--font-mono);
+  content: counter(point, decimal-leading-zero);
+}
+
+.entities {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-8);
+  padding-top: 14px;
+}
+
+.entity-title {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.entity-group .empty {
+  margin-top: var(--space-2);
+}
+
+.entity-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 14px 0 0;
+  list-style: none;
+}
+
+@media (max-width: 900px) {
+  .entities {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+  }
+}
