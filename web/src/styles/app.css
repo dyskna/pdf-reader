@@ -80,7 +80,7 @@ body {
   font-weight: var(--weight-medium);
 }
 
-/* Układ: szałwiowy margines + treść (w projekcie: .result) */
+/* Układ: kolorowy margines + treść (w projekcie: .result) */
 .layout {
   display: grid;
   flex: 1;
@@ -94,16 +94,16 @@ body {
   flex-direction: column;
   gap: var(--space-7);
   padding: var(--space-14) var(--space-8);
-  background: var(--color-sage);
-  color: var(--color-sage-ink);
+  background: var(--color-field);
+  color: var(--color-field-ink);
 }
 
 .doc-type {
   align-self: flex-start;
   padding: 5px var(--space-3);
   border-radius: var(--radius-sm);
-  background: var(--color-sage-ink);
-  color: var(--color-sage-ink-inverse);
+  background: var(--color-paper);
+  color: var(--color-ink);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
 }
@@ -121,7 +121,7 @@ body {
   flex-direction: column;
   gap: 2px;
   padding-top: 10px;
-  border-top: var(--line-hair) solid var(--color-sage-line);
+  border-top: var(--line-hair) solid var(--color-field-line);
 }
 
 .meta dd {
@@ -137,7 +137,7 @@ body {
   flex-direction: column;
   gap: var(--space-3);
   padding-top: 10px;
-  border-top: var(--line-hair) solid var(--color-sage-line);
+  border-top: var(--line-hair) solid var(--color-field-line);
   font-size: var(--text-sm);
 }
 
@@ -253,7 +253,7 @@ body {
 .notice {
   margin: 0;
   padding: 14px 18px;
-  border: var(--line-hair) solid var(--color-sage-line);
+  border: var(--line-hair) solid var(--color-line-control);
   border-radius: var(--radius-sm);
 }
 
@@ -323,8 +323,8 @@ body {
   align-self: flex-start;
   padding: 2px var(--space-2);
   border-radius: var(--radius-sm);
-  background: var(--color-sage);
-  color: var(--color-sage-ink);
+  background: var(--color-surface);
+  color: var(--color-ink);
   font-size: var(--text-xs);
 }
 
@@ -342,7 +342,7 @@ body {
   flex-direction: column;
   gap: 6px;
   padding-left: var(--space-3);
-  border-left: var(--line-accent) solid var(--color-sage-line);
+  border-left: var(--line-accent) solid var(--color-ink-muted);
 }
 
 .date time {
@@ -391,8 +391,8 @@ body {
 
 .dropzone.is-dragging {
   border-style: solid;
-  border-color: var(--color-sage-line);
-  background: var(--color-sage);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .dropzone-title {
@@ -453,8 +453,8 @@ body {
 }
 
 .step--done .step-marker {
-  border-color: var(--color-sage-ink);
-  background: var(--color-sage-ink);
+  border-color: var(--color-ink);
+  background: var(--color-ink);
 }
 
 .step--current {
